@@ -54,20 +54,20 @@ int main(int argc, char** argv) {
 #else
 struct thread_struct {
   int loop_end;
-  int sum;
-  pthread_mutex_t m;
-  thread_struct(int loop_end, int& sum, pthread_mutex_t &m)
+  int *sum;
+  pthread_mutex_t *m;
+  thread_struct(int loop_end, int *sum, pthread_mutex_t *m)
     : loop_end(loop_end), sum(sum), m(m) {};
 };
 
 void thread_function(void* thread_struct_ptr) {
   thread_struct *data = (thread_struct *) thread_struct_ptr;
   for (int i = 0; i < data->loop_end; ++i) {
-    std::cout<<"moep"<<std::endl;
+//    std::cout<<"moep"<<std::endl;
     waste_time();
-    pthread_mutex_lock(&data->m);
-    data->sum++;
-    pthread_mutex_unlock(&data->m);
+    pthread_mutex_lock(data->m);
+    (*data->sum)++;
+    pthread_mutex_unlock(data->m);
   }
 }
 
@@ -85,7 +85,8 @@ int main(int argc, char** argv) {
     c = clock();
     int loop_end = 1000000/number_of_created_treads;
     for (int i = 0; i < number_of_created_treads; i++)
-      pool.addThread(thread_function, (void *) new thread_struct(loop_end, sum, locked));
+      pool.addThread(thread_function, 
+          (void *) new thread_struct(loop_end, &sum, &locked));
     pool.wait();
     time(&t2);
     std::cout<<"threads: "<<number_of_created_treads

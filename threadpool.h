@@ -28,10 +28,10 @@ typedef pthread_cond_t cond_t;
 struct pthread_struct {
   void (*func)(void *);
   void *thread_struct;
-  int free;
-  mu_t lock;
-  cond_t free_thread;
-  pthread_struct(void func(void *), void* thr_str, int& f, mu_t& m, cond_t& c) 
+  int *free;
+  mu_t *lock;
+  cond_t *free_thread;
+  pthread_struct(void func(void *), void *thr_str, int *f, mu_t *m, cond_t *c) 
     : func(func), thread_struct(thr_str), free(f), lock(m), free_thread(c) { };
 };
 #endif

@@ -31,6 +31,7 @@ void threadpool::wait() {
   std::unique_lock<std::mutex> l(lock);
   free_thread.wait(l, [this](){ return free == size; });
 }
+
 #else
 
 threadpool::threadpool(int size) : size(size) {
@@ -45,9 +46,10 @@ threadpool::~threadpool() {
 void *add_thread_func(void *data_ptr) {
   pthread_struct *data = (pthread_struct *) data_ptr;
   data->func(data->thread_struct);
-  data->free++;
-  pthread_cond_signal(&data->free_thread);
-  pthread_mutex_unlock(&data->lock);
+  pthread_mutex_lock(data->lock);
+  (*data->free)++;
+  pthread_cond_signal(data->free_thread);
+  pthread_mutex_unlock(data->lock);
   pthread_exit(NULL);
 }
 
@@ -55,15 +57,18 @@ void threadpool::addThread(func_t func, void *struc) {
   pthread_t thr_id;
   pthread_mutex_lock(&lock);
   while (free == 0)
-    pthread_cond_wait(&free_thread, &lock);
+    pthread_cond_wait(&free_thread, &lock); 
   free--;
+  pthread_mutex_unlock(&lock);
   pthread_create(&thr_id, NULL, add_thread_func, 
-      (void*) new pthread_struct(func, struc, free, lock, free_thread));
-  pthread_detach(thr_id++);
+      (void*) new pthread_struct(func, struc, &free, &lock, &free_thread));
+  pthread_detach(thr_id);
 }
 
 void threadpool::wait() {
+  pthread_mutex_lock(&lock);
   while(free != size)
     pthread_cond_wait(&free_thread, &lock);
+  pthread_mutex_unlock(&lock);
 }
 #endif

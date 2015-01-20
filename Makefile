@@ -1,7 +1,7 @@
 CC=g++
 AR=ar
 
-CFLAGS=-c -Wall -std=c++98
+CFLAGS=-c -Wall# -std=c++11
 LIBFLAGS= -L. -lthreadpool
 ARFLAGS=crf
 
@@ -14,7 +14,7 @@ threadpool.o: threadpool.cpp threadpool.h
 	$(CC) $(CFLAGS) threadpool.cpp
 
 test: libthreadpool.a test.cpp
-	$(CC) -c -Wall -std=c++98 test.cpp -pthread
+	$(CC) $(CFLAGS) test.cpp -pthread
 	$(CC) test.o $(LIBFLAGS) -pthread -o test
 
 .PHONY: clean
